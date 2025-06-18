@@ -1,7 +1,4 @@
-
-
 # Roku project via Git Repository with SQLite db
-
 import os
 import time
 import json
@@ -351,7 +348,7 @@ class Authentication:
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.image("C:/clak/_alfa_projects/_git_projects/Roku_Contec/contec.png", width=175)
+            st.image("https://github.com/clakshmanan/roku_data.git/contec.png", width=175)
             st.write(" ")
             st.write("An Application product for")
             st.subheader("ROKU_CONTEC")
