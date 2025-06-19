@@ -26,7 +26,8 @@ st.set_page_config(
     page_title="Contec",
     page_icon="🌀",
     layout='wide',
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
+    dark_mode = True
 )
 
 # Remove footer and optimize Streamlit performance
