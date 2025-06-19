@@ -1,6 +1,6 @@
 # works well beta () modification
 import os
-import time, timezones
+import time
 import pytz
 import json
 import sqlite3
@@ -26,8 +26,8 @@ st.set_page_config(
     page_title="Contec",
     page_icon="🌀",
     layout='wide',
-    initial_sidebar_state="expanded",
-    dark_mode = True
+    initial_sidebar_state="expanded"
+    
 )
 
 # Remove footer and optimize Streamlit performance
@@ -301,8 +301,8 @@ class Authentication:
             st.subheader("ROKU_CONTEC")
             #st.header(datetime.now().strftime("%H:%M"))
             #utc_now = datetime.utcnow().strftime('%Y-%m-%d   %H:%M:%S')
-            utc_now = datetime.utcnow().strftime('%Y-%m-%d   %H:%M')
-            st.header(utc_now)
+            #utc_now = datetime.utcnow().strftime('%Y-%m-%d   %H:%M')
+            #st.header(utc_now)
             #st.write(f'\033  HAVE A HAPPY DAY  \r{utc_now}', end='', flush=True)
     
     #---------------------------------------------------------------------------------
