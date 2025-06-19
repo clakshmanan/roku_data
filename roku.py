@@ -297,7 +297,7 @@ class Authentication:
         with col1:
             st.write("A product of")
             #st.image("https://github.com/clakshmanan/Data_Roku/contec.png", width=175)
-            st.image("https://github.com/clakshmanan/roku_data.git/contec.png", width=175)
+            st.image("https://github.com/clakshmanan/roku_data/contec.png", width=175)
             st.subheader("ROKU_CONTEC")
             #st.header(datetime.now().strftime("%H:%M"))
             #utc_now = datetime.utcnow().strftime('%Y-%m-%d   %H:%M:%S')
