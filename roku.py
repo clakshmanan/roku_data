@@ -1,6 +1,7 @@
-# Roku project via Git Repository with SQLite db
+# works well beta () modification
 import os
-import time
+import time, timezones
+import pytz
 import json
 import sqlite3
 import pandas as pd
@@ -19,85 +20,6 @@ from io import StringIO
 from urllib.parse import urljoin
 from io import StringIO
 from cachetools import cached, TTLCache
-
-# Dark mode toggle button
-def dark_mode_toggle():
-    if 'dark_mode' not in st.session_state:
-        st.session_state.dark_mode = False
-    
-    # Button in sidebar to toggle dark mode
-    if st.sidebar.button('🌙 Dark Mode' if not st.session_state.dark_mode else '☀️ Light Mode'):
-        st.session_state.dark_mode = not st.session_state.dark_mode
-        st.rerun()
-
-# Apply dark mode styles
-def apply_dark_mode():
-    if st.session_state.get('dark_mode', False):
-        st.markdown("""
-            <style>
-                .stApp {
-                    background-color: #0e1117;
-                    color: #fafafa;
-                }
-                .css-18e3th9 {
-                    background-color: #0e1117;
-                }
-                .css-1d391kg {
-                    background-color: #0e1117;
-                }
-                .st-bb {
-                    background-color: #0e1117;
-                }
-                .st-at {
-                    background-color: #0e1117;
-                }
-                .st-ae {
-                    background-color: #0e1117;
-                }
-                .st-af {
-                    background-color: #0e1117;
-                }
-                .stButton>button {
-                    color: #fafafa;
-                    background-color: #262730;
-                    border-color: #fafafa;
-                }
-                .stTextInput>div>div>input {
-                    color: #fafafa;
-                    background-color: #262730;
-                }
-                .stSelectbox>div>div>select {
-                    color: #fafafa;
-                    background-color: #262730;
-                }
-                .stNumberInput>div>div>input {
-                    color: #fafafa;
-                    background-color: #262730;
-                }
-                .stDateInput>div>div>input {
-                    color: #fafafa;
-                    background-color: #262730;
-                }
-                .css-1q8dd3e {
-                    color: #fafafa;
-                }
-                .css-1fv8s86 p {
-                    color: #fafafa;
-                }
-                .css-1fv8s86 h1, .css-1fv8s86 h2, .css-1fv8s86 h3, .css-1fv8s86 h4, .css-1fv8s86 h5, .css-1fv8s86 h6 {
-                    color: #fafafa;
-                }
-                .css-12ttj6m {
-                    background-color: #262730;
-                }
-                .css-1y4p8pa {
-                    background-color: #262730;
-                }
-                .css-1oe5cao {
-                    background-color: #262730;
-                }
-            </style>
-        """, unsafe_allow_html=True)
 
 # Page configuration with optimized settings
 st.set_page_config(
@@ -118,9 +40,6 @@ st.markdown("""
         .stHorizontalBlock {gap: 1rem;}
     </style>
 """, unsafe_allow_html=True)
-
-# Apply dark mode if enabled
-apply_dark_mode()
 
 #----------------------------------------------------------------------------------------------------------------
 ## database setup with SQLite
@@ -194,6 +113,11 @@ class DatabaseManager:
         conn = self.get_connection()
         try:
             df = pd.read_sql_query("SELECT * FROM roku_data", conn)
+            # Ensure proper data types
+            df['reportdate'] = pd.to_datetime(df['reportdate'])
+            df['qty'] = pd.to_numeric(df['qty'], errors='coerce').fillna(0).astype(int)
+            df['amount'] = pd.to_numeric(df['amount'], errors='coerce').fillna(0).round(2)
+            df['rate'] = pd.to_numeric(df['rate'], errors='coerce').fillna(0).round(2)
             return df
         except Exception as e:
             st.error(f"Error fetching roku_data: {str(e)}")
@@ -342,19 +266,10 @@ class Authentication:
             return []
         finally:
             conn.close()
-# ----------------------------------------------------------------------------------------------------------
+    
     def login_page(self):
         """Render the login page with colorful design"""
         col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.image("https://github.com/clakshmanan/roku_data.git/contec.png", width=175)
-            st.write(" ")
-            st.write("An Application product for")
-            st.subheader("ROKU_CONTEC")
-
-            #st.image("https://github.com/clakshmanan/Data_Roku/contec.png", width=175)
-           
         with col3:
             new_title = '<p style="font-family:sans-serif;text-align:left; color:#1c03fc; font-size: 25px;">🔒 Login </p>'
             st.markdown(new_title, unsafe_allow_html=True)
@@ -378,15 +293,25 @@ class Authentication:
                         time.sleep(1)
                         st.rerun()
        
-        
-# -------------------------------------------------------------------------------------------------------------------------
+        with col1:
+            st.write("A product of")
+            #st.image("https://github.com/clakshmanan/Data_Roku/contec.png", width=175)
+            st.image("https://github.com/clakshmanan/roku_data.git/contec.png", width=175)
+            st.subheader("ROKU_CONTEC")
+            #st.header(datetime.now().strftime("%H:%M"))
+            #utc_now = datetime.utcnow().strftime('%Y-%m-%d   %H:%M:%S')
+            utc_now = datetime.utcnow().strftime('%Y-%m-%d   %H:%M')
+            st.header(utc_now)
+            #st.write(f'\033  HAVE A HAPPY DAY  \r{utc_now}', end='', flush=True)
+    
+    #---------------------------------------------------------------------------------
     def user_management_page(self):
         """User management page for admin/superadmin with colorful design"""
         if not st.session_state.get('is_admin'):
             st.error("Admin privileges required")
             return
         
-        st.title("👑 User Management")
+        st.title("👮🏻‍♂️User Management")
         
         # Create new user section with colorful card
         with st.expander("➕ Create New User", expanded=True):
@@ -423,7 +348,7 @@ class Authentication:
             for username, is_admin, is_superadmin in users:
                 # Determine card color based on user role
                 if is_superadmin:
-                    card_color = "linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)"
+                    card_color = "linear-gradient(135deg, #00ccff 0%, #fad0c4 100%)"
                 elif is_admin:
                     card_color = "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)"
                 else:
@@ -472,8 +397,7 @@ class Authentication:
             st.warning("No users found")
 
 # -------------------------------------------------------------------------------------
-# Your existing ContecApp class with all original methods (alfa, beta, charlie, delta, echo)
-# Modified to use DataLoader instead of SQLiteLoader
+# ContecApp class with all methods properly handling Sunday-to-Saturday weeks
 class ContecApp:
     def __init__(self):
         self.data_loader = DataLoader()
@@ -519,10 +443,28 @@ class ContecApp:
             
             graph()
     
+    def get_week_start_end_dates(self, date_series):
+        """Calculate Sunday-to-Saturday weeks for a series of dates"""
+        # Convert to datetime if not already
+        dates = pd.to_datetime(date_series)
+        
+        # Calculate the start of week (Sunday)
+        week_starts = dates - pd.to_timedelta(dates.dt.weekday + 1, unit='d')
+        week_starts = week_starts.dt.normalize()  # Remove time component
+        
+        # Calculate week number (ISO week would start on Monday, so we adjust)
+        week_numbers = (dates - pd.to_timedelta(1, unit='d')).dt.isocalendar().week
+        
+        # Calculate end of week (Saturday)
+        week_ends = week_starts + pd.to_timedelta(6, unit='d')
+        
+        return week_starts, week_ends, week_numbers
+    
+    # ---------------------------------------------------------------------------------------------------
     @cached(cache=TTLCache(maxsize=2, ttl=1800))
     def alfa(self):
         st.markdown(
-            '<p style="font-family:sans-serif;text-align:center; color:#83e6e6; font-size: 25px;">MONTH-WISE-REVENUE-GRAPH</p>',
+            '<p style="font-family:sans-serif;text-align:center; color:#83e6e6; font-size: 25px;">WEEK WISE  MONTHLY REVENUE GRAPH</p>',
             unsafe_allow_html=True
         )
         
@@ -540,27 +482,28 @@ class ContecApp:
             if df.empty:
                 return pd.DataFrame()
             
-            # Convert columns to proper types
-            df['reportdate'] = pd.to_datetime(df['reportdate'])
-            df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
-            
             # Filter data for the selected year and month
-            filtered = df[(df['reportdate'].dt.year == year) & 
-                        (df['reportdate'].dt.month == month)]
+            df = df[(df['reportdate'].dt.year == year) & 
+                    (df['reportdate'].dt.month == month)]
             
-            if filtered.empty:
+            if df.empty:
                 return pd.DataFrame()
             
+            # Calculate Sunday-to-Saturday weeks
+            df['week_start'] = df['reportdate'] - pd.to_timedelta((df['reportdate'].dt.weekday + 1) % 7, unit='d')
+            df['week_end'] = df['week_start'] + pd.to_timedelta(6, unit='d')
+            
             # Group by week
-            weekly_data = filtered.groupby(filtered['reportdate'].dt.isocalendar().week).agg({
-                'reportdate': ['min', 'max'],
-                'amount': 'sum'
+            weekly_data = df.groupby(['week_start', 'week_end']).agg({
+                'amount': 'sum',
+                'qty': 'sum'
             }).reset_index()
-            
-            weekly_data.columns = ['week_number', 'start_date', 'end_date', 'total_amount']
-            weekly_data['total_amount'] = weekly_data['total_amount'].round(2)
-            
-            return weekly_data
+            # Add week number
+            weekly_data['week_number'] = range(1, len(weekly_data)+1)
+            # Round amounts and convert quantities
+            weekly_data['total_amount'] = weekly_data['amount'].round(2)
+            weekly_data['total_quantity'] = weekly_data['qty'].astype(int)
+            return weekly_data.drop(columns=['amount', 'qty']).sort_values('week_start')
 
         with st.spinner("Loading data..."):
             weekly_data = fetch_weekly_data(year, month)
@@ -571,40 +514,89 @@ class ContecApp:
                 unsafe_allow_html=True
             )
             
+            # Create electric wave visualization
             fig = go.Figure()
+            
+            # Generate smooth wave-like data points
+            x = weekly_data['week_number']
+            y = weekly_data['total_amount']
+            
+            # Create a smooth curve through the points
+            x_smooth = np.linspace(x.min(), x.max(), 300)
+            y_smooth = np.interp(x_smooth, x, y)
+            
+            # Add electric wave trace
             fig.add_trace(go.Scatter(
-                x=weekly_data['week_number'],
-                y=weekly_data['total_amount'],
-                mode='lines+markers',
-                name='Current Week',
-                line=dict(color='blue', width=3),
-                marker=dict(size=6, color='blue', symbol='circle')
+                x=x_smooth,
+                y=y_smooth,
+                mode='lines',
+                name='Revenue Wave',
+                line=dict(
+                    color='#00f2ff',
+                    width=4,
+                    shape='spline',
+                    smoothing=1.3
+                ),
+                fill='tozeroy',
+                fillcolor='rgba(0, 242, 255, 0.2)'
             ))
             
-            previous_week_amounts = [0] + weekly_data['total_amount'].tolist()[:-1]
+            # Add spark points at each week
             fig.add_trace(go.Scatter(
-                x=weekly_data['week_number'],
-                y=previous_week_amounts,
-                mode='lines+markers',
-                name='Previous Week',
-                line=dict(color='red', width=3, dash='dash'),
-                marker=dict(size=6, color='red', symbol='circle')
+                x=x,
+                y=y,
+                mode='markers+text',
+                name='Week Peaks',
+                marker=dict(
+                    color='#ff00e4',
+                    size=12,
+                    line=dict(width=2, color='white')
+                ),
+                text=[f"Week {int(w)}" for w in weekly_data['week_number']],
+                textposition='top center',
+                textfont=dict(
+                    family="Arial",
+                    size=12,
+                    color="white"
+                )
             ))
             
+            # Customize layout
             fig.update_layout(
-                title='📊 Current vs Previous Week Comparison',
+                title='⚡ Monthly Revenue Graph ⚡',
                 xaxis_title='Week Number',
-                yaxis_title='Total Amount',
-                template='plotly_white',
-                font=dict(family='Arial, sans-serif', size=12, color='#2C3E50'),
-                legend=dict(x=0.02, y=0.98, borderwidth=1),
-                height=450
+                yaxis_title='Amount ($)',
+                template='plotly_dark',
+                plot_bgcolor='rgba(0, 0, 20, 0.9)',
+                paper_bgcolor='rgba(0, 0, 20, 0.7)',
+                font=dict(family='Arial, sans-serif', size=12, color='white'),
+                legend=dict(x=0.02, y=0.98),
+                height=500,
+                hovermode='x unified',
+                xaxis=dict(
+                    showgrid=True,
+                    gridcolor='rgba(100, 100, 100, 0.2)',
+                    tickvals=x,
+                    ticktext=[f"Week {int(w)}" for w in x]
+                ),
+                yaxis=dict(
+                    showgrid=True,
+                    gridcolor='rgba(100, 100, 100, 0.2)'
+                )
             )
             
             st.plotly_chart(fig, use_container_width=True)
+            
+            # Display week details
+            st.subheader("Weekly Details")
+            for _, row in weekly_data.iterrows():
+                st.write(f"Week {int(row['week_number'])}: {row['week_start'].strftime('%m/%d/%Y')} to {row['week_end'].strftime('%m/%d/%Y')}")
+                st.write(f"  - Amount: ${row['total_amount']:,.2f}")
+                st.write(f"  - Quantity: {row['total_quantity']:,}")
+                st.write("---")
         else:
             st.warning("⚠️ No data found for the selected filters.")
-
+    #----------------------------------------------------------------------------------------------
     def beta(self):
         st.markdown(
             "<h3 style='text-align: center; font-family: Arial, sans-serif; font-weight: bold; color:#0cb3f0;'>📊Roku Week-Wise Data</h3>",
@@ -617,36 +609,43 @@ class ContecApp:
             if df.empty:
                 return pd.DataFrame()
             
-            # Convert columns to proper types
-            df['reportdate'] = pd.to_datetime(df['reportdate'])
-            df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
-            df['qty'] = pd.to_numeric(df['qty'], errors='coerce')
-            
             # Filter data for the selected year and month
-            filtered = df[(df['reportdate'].dt.year == year) & 
-                        (df['reportdate'].dt.month == month)]
+            df = df[(df['reportdate'].dt.year == year) & 
+                    (df['reportdate'].dt.month == month)]
             
-            if filtered.empty:
+            if df.empty:
                 return pd.DataFrame()
             
+            # Find first Sunday of the year
+            first_day = datetime(year, 1, 1)
+            first_sunday = first_day + timedelta(days=(6 - first_day.weekday()))
+            
+            # Calculate Sunday-to-Saturday weeks
+            df['week_start'] = df['reportdate'] - pd.to_timedelta((df['reportdate'].dt.weekday + 1) % 7, unit='d')
+            df['week_end'] = df['week_start'] + pd.to_timedelta(6, unit='d')
+            
+            # Calculate continuous week numbers from first Sunday of the year
+            df['week_number'] = ((df['week_start'] - first_sunday).dt.days // 7) + 1
+            
             # Group by week
-            weekly_data = filtered.groupby(filtered['reportdate'].dt.isocalendar().week).agg({
-                'reportdate': ['min', 'max'],
+            weekly_data = df.groupby(['week_number', 'week_start', 'week_end']).agg({
                 'amount': 'sum',
                 'qty': 'sum'
-            }).reset_index()
+            }).reset_index().sort_values('week_number')
             
-            weekly_data.columns = ['week_number', 'start_date', 'end_date', 'total_amount', 'total_quantity']
-            weekly_data['total_amount'] = weekly_data['total_amount'].round(2)
-            weekly_data['total_quantity'] = weekly_data['total_quantity'].astype(int)
+            weekly_data['total_amount'] = weekly_data['amount'].round(2)
+            weekly_data['total_quantity'] = weekly_data['qty'].astype(int)
             
-            return weekly_data
+            # Calculate percentage change using shift() for safety
+            weekly_data['pct_change'] = (weekly_data['total_amount'].pct_change() * 100).round(1)
+            
+            return weekly_data.drop(columns=['amount', 'qty'])
 
         col1, col2, col3 = st.columns(3)
         with col1:
             year = st.number_input("📅 Year", min_value=2000, max_value=2100, value=datetime.now().year)
         with col2:
-            month = st.selectbox(".Month", list(range(1, 13)), format_func=lambda x: datetime(2000, x, 1).strftime('%B'))
+            month = st.selectbox("Month", list(range(1, 13)), format_func=lambda x: datetime(2000, x, 1).strftime('%B'))
         with col3:
             invoice_code = st.text_input("🔑 Invoice Code", value="ROKU")
         st.divider()
@@ -663,76 +662,148 @@ class ContecApp:
             card_style = """
                 <style>
                     .metric-card {
-                        background-color:#7ad7ff;
-                        border-radius: 14px;
-                        padding: 24px;
-                        margin: 14px;
-                        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-                        text-align: left;
+                        background: linear-gradient(135deg, #ffffb3 0%, #e4e8f0 100%);
+                        border-radius: 12px;
+                        padding: 20px;
+                        margin: 12px;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        text-align: center;
                         font-family: Arial, sans-serif;
+                        border-left: 5px solid #0cb3f0;
                     }
                     .metric-header {
-                        font-size: 14px;
+                        font-size: 16px;
                         font-weight: bold;
-                        color: #333;
+                        color: #2c3e50;
+                        margin-bottom: 10px;
                     }
                     .metric-value {
                         font-size: 14px;
                         font-weight: bold;
-                        color: #c9497a;
+                        color: #2c3e50;
+                        margin: 5px 0;
+                    }
+                    .metric-date {
+                        font-size: 12px;
+                        font-weight:bold;
+                        color: #060e24;
+                        margin-top: 10px;
+                    }
+                    .positive-change {
+                        color: #27ae60;
+                        font-size: 12px;
+                        font-weight: bold;
+                        background-color: rgba(39, 174, 96, 0.1);
+                        padding: 3px 6px;
+                        border-radius: 4px;
+                    }
+                    .negative-change {
+                        color: #e74c3c;
+                        font-size: 12px;
+                        font-weight: bold;
+                        background-color: rgba(231, 76, 60, 0.1);
+                        padding: 3px 6px;
+                        border-radius: 4px;
                     }
                 </style>
             """
             st.markdown(card_style, unsafe_allow_html=True)
             
             for index, row in weekly_data.iterrows():
-                week_number = str(row["week_number"])  # Convert to string
-                start_date = row["start_date"]
-                end_date = row["end_date"]
-                total_qty = f"{int(row['total_quantity']):,}"  # Convert to int and format
-                total_amount = f"${float(row['total_amount']):,.2f}"  # Convert to float and format
-                prev_amount = float(weekly_data.iloc[index - 1]['total_amount']) if index > 0 else float(row['total_amount'])
+                week_number = str(int(row['week_number']))
+                start_date = row['week_start'].strftime('%m/%d/%Y')
+                end_date = row['week_end'].strftime('%m/%d/%Y')
+                total_qty = f"{int(row['total_quantity']):,}"
+                total_amount = f"${float(row['total_amount']):,.2f}"
                 
-                col1, col2, col3 = st.columns([1, 1, 2])
+                # Safely get previous week data
+                prev_row = None
+                if index > 0:
+                    prev_row = weekly_data.iloc[index - 1]
+                elif row['week_number'] > 1:
+                    # Try to get data from previous month if available
+                    prev_month = month - 1 if month > 1 else 12
+                    prev_year = year if month > 1 else year - 1
+                    prev_data = fetch_weekly_data(prev_year, prev_month)
+                    if not prev_data.empty:
+                        prev_row = prev_data[prev_data['week_number'] == row['week_number'] - 1]
+                        if not prev_row.empty:
+                            prev_row = prev_row.iloc[0]
+                
+                col1, col2 = st.columns([1, 2])
                 with col1:
-                    st.markdown(f"""
-                        <div class="metric-card">
-                            <div class="metric-header"> Week {week_number}📦</div>
-                            <div class="metric-value">Units: {total_qty}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    if prev_row is not None and not pd.isna(row['pct_change']):
+                        change_amount = row['total_amount'] - prev_row['total_amount']
+                        change_text = f"+${abs(change_amount):.2f}" if change_amount >= 0 else f"-${abs(change_amount):.2f}"
+                        change_class = "positive-change" if change_amount >= 0 else "negative-change"
+                        
+                        st.markdown(f"""
+                            <div class="metric-card">
+                                <div class="metric-header">Week {week_number}</div>
+                                <div class="metric-value">📦 Qty: {total_qty}</div>
+                                <div class="metric-value">💰 Amount: {total_amount}</div>
+                                <div class="{change_class}">📈 {change_text} ({abs(row['pct_change'])}%)</div>
+                                <div class="metric-date">📅 {start_date} to {end_date}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"""
+                            <div class="metric-card">
+                                <div class="metric-header">Week {week_number}</div>
+                                <div class="metric-value">📦 Qty: {total_qty}</div>
+                                <div class="metric-value">💰 Amount: {total_amount}</div>
+                                <div class="metric-date">📅 {start_date} to {end_date}</div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                
                 with col2:
-                    st.markdown(f"""
-                        <div class="metric-card">
-                            <div class="metric-header"> Week {week_number}💰</div>
-                            <div class="metric-value">Amount: {total_amount}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                st.markdown("<hr>", unsafe_allow_html=True)
-                with col3:
-                    wave_fig = go.Figure()
-                    wave_fig.add_trace(go.Scatter(
-                        x=[start_date, end_date],
-                        y=[prev_amount, float(row['total_amount'])],  # Ensure float conversion
-                        mode="lines+markers",
-                        name=f"Comparison - Week {week_number}",
-                        line=dict(shape="spline", color="#1f77b4", width=3),
-                        marker=dict(size=4, symbol="circle", color="#1f77b4"),
-                    ))
-                    wave_fig.update_layout(
-                        title=f'compared with week {int(week_number) - 1}📊 ',  # Convert to int for arithmetic
-                        xaxis_title='Date',
-                        yaxis_title='Amount',
-                        template="plotly_white",
-                        height=250,
-                        font=dict(family="Arial, sans-serif", size=12, color="#2C3E50")
-                    )
-                    st.plotly_chart(wave_fig, use_container_width=True)
-                st.markdown("<hr>", unsafe_allow_html=True)
-                time.sleep(1)
+                    if prev_row is not None and not pd.isna(row['pct_change']):
+                        # Create comparison visualization
+                        fig = go.Figure()
+                        
+                        weeks = [f"Week {int(row['week_number']) - 1}", f"Week {int(row['week_number'])}"]
+                        amounts = [prev_row['total_amount'], row['total_amount']]
+                        
+                        fig.add_trace(go.Bar(
+                            x=weeks,
+                            y=amounts,
+                            marker_color=['#3498db', '#2ecc71'],
+                            text=[f"${x:,.2f}" for x in amounts],
+                            textposition='auto'
+                        ))
+                        
+                        # Add trend line
+                        fig.add_trace(go.Scatter(
+                            x=weeks,
+                            y=amounts,
+                            mode='lines+markers',
+                            line=dict(color='#db39db', width=2),
+                            marker=dict(size=10),
+                            showlegend=False
+                        ))
+                        
+                        fig.update_layout(
+                            title=f"Week-over-Week Comparison",
+                            xaxis_title='',
+                            yaxis_title='Amount ($)',
+                            template='plotly_white',
+                            height=300,
+                            margin=dict(l=20, r=20, t=60, b=20)
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        if row['week_number'] == 1:
+                            st.info("🌟 First week of the year - no comparison available")
+                        else:
+                            st.info("⚠️ Previous week data not available for comparison")
+                
+                st.markdown("<hr style='border-top: 1px dashed #ddd; margin: 20px 0;'>", unsafe_allow_html=True)
+                time.sleep(0.3)
         else:
             st.warning("⚠️ No data found for the selected filters.")
 
+#-----------------------------------------------------------------------------------------------------------
     @cached(cache=TTLCache(maxsize=2, ttl=1800))
     def charlie(self):
         @cached(cache=TTLCache(maxsize=2, ttl=1800))
@@ -741,19 +812,14 @@ class ContecApp:
             if df.empty:
                 return pd.DataFrame()
             
-            # Convert columns to proper types
-            df['reportdate'] = pd.to_datetime(df['reportdate'])
-            df['qty'] = pd.to_numeric(df['qty'], errors='coerce')
-            df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
-            
             filtered = df[(df['reportdate'] >= pd.to_datetime(from_date)) & 
-                        (df['reportdate'] <= pd.to_datetime(to_date))]
+                         (df['reportdate'] <= pd.to_datetime(to_date))]
             
             return filtered
 
-        new_title = '<p style="font-family:sans-serif;text-align:center; color:#5142f5; font-size: 25px;">🌍 ROKU SERVICECODE DATA 🌍</p>'
+        new_title = '<p style="font-family:sans-serif;text-align:center; color:#5142f5; font-size: 25px;">🎯 Invoiced Week-wise Servicecode Data 🎯</p>'
         st.markdown(new_title, unsafe_allow_html=True)
-        st.markdown("#### Select your week between")
+        st.markdown("#### Select Invoice Week")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -770,13 +836,16 @@ class ContecApp:
         if not df.empty:
             def calculate_metrics(df):
                 df = df.copy()
-                df['WeekStart'] = df['reportdate'] - pd.to_timedelta(df['reportdate'].dt.weekday + 1, unit='d')
-                weekly_metrics = df.groupby(['servicecode', 'WeekStart']).agg({
+                # Calculate Sunday-to-Saturday weeks
+                week_starts, _, _ = self.get_week_start_end_dates(df['reportdate'])
+                
+                weekly_metrics = df.groupby(['servicecode', week_starts]).agg({
                     'qty': 'sum',
                     'amount': 'sum'
                 }).reset_index()
-                weekly_metrics['qty'] = weekly_metrics['qty'].astype(int)  # Convert to int
-                weekly_metrics['amount'] = weekly_metrics['amount'].round(2)  # Round to 2 decimals
+                weekly_metrics.columns = ['servicecode', 'WeekStart', 'qty', 'amount']
+                weekly_metrics['qty'] = weekly_metrics['qty'].astype(int)
+                weekly_metrics['amount'] = weekly_metrics['amount'].round(2)
                 return weekly_metrics
             
             weekly_metrics = calculate_metrics(df)
@@ -812,21 +881,12 @@ class ContecApp:
                     st.rerun()
         else:
             st.warning("No data found for the selected date range.")
-
+    
     @cached(cache=TTLCache(maxsize=2, ttl=1800))
     def delta(self):
         @cached(cache=TTLCache(maxsize=2, ttl=1800))
         def fetch_statistical_data():
-            df = self.fetch_data()
-            if df.empty:
-                return pd.DataFrame()
-            
-            # Convert columns to proper types
-            df['reportdate'] = pd.to_datetime(df['reportdate'])
-            df['qty'] = pd.to_numeric(df['qty'], errors='coerce')
-            df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
-            
-            return df
+            return self.fetch_data()
 
         with st.spinner("Loading data..."): 
             df = fetch_statistical_data()
@@ -839,11 +899,15 @@ class ContecApp:
         st.divider()
         
         if not df.empty:
-            df['reportdate'] = pd.to_datetime(df['reportdate'])
-            df['Week'] = df['reportdate'].dt.isocalendar().week.astype(str)  # Convert to string
-            df['Month'] = df['reportdate'].dt.month.astype(str)  # Convert to string
-            df['Quarter'] = df['reportdate'].dt.quarter.astype(str)  # Convert to string
-            df['HalfYear'] = ((df['reportdate'].dt.month - 1) // 6 + 1).astype(str)  # Convert to string
+            # Calculate Sunday-to-Saturday weeks
+            week_starts, _, week_numbers = self.get_week_start_end_dates(df['reportdate'])
+            
+            # Add all time period columns
+            df['Week'] = week_numbers.astype(str)
+            df['Month'] = df['reportdate'].dt.month.astype(str)
+            df['Quarter'] = df['reportdate'].dt.quarter.astype(str)
+            df['HalfYear'] = ((df['reportdate'].dt.month - 1) // 6 + 1).astype(str)
+            df['Year'] = df['reportdate'].dt.year.astype(str)
             
             col1,col2 = st.columns(2)
             with col1:
@@ -870,7 +934,7 @@ class ContecApp:
                         'amount': 'sum'
                     }).reset_index()
                 
-                # Convert numeric columns to proper types
+                # Convert numeric columns
                 grouped_data['qty'] = grouped_data['qty'].astype(int)
                 grouped_data['amount'] = grouped_data['amount'].round(2)
                 
@@ -882,13 +946,26 @@ class ContecApp:
             with col2:
                 Graph = st.selectbox("Select Histogram",["Pie_Chart", "Line_Chart", "Bar_Chart", "Scatter_Chart"])
                 if Graph == "Pie_Chart":
-                    st.plotly_chart(px.pie(grouped_data, values='amount', names='servicecode', title='Proportion of Amount by Servicecode-2025'), use_container_width=True)
+                    st.plotly_chart(px.pie(grouped_data, values='amount', names='servicecode', 
+                                       title='Proportion of Amount by Servicecode-2025',
+                                       hover_data=['amount'], 
+                                       labels={'amount': 'Amount ($)'}), 
+                                 use_container_width=True)
                 elif Graph == 'Line_Chart':
-                    st.plotly_chart(px.line(grouped_data, x=grouped_data.columns[0], y='amount', color='servicecode', markers=True), use_container_width=True)
+                    st.plotly_chart(px.line(grouped_data, x=grouped_data.columns[0], y='amount', 
+                                         color='servicecode', markers=True,
+                                         labels={'amount': 'Amount ($)'}),
+                                 use_container_width=True)
                 elif Graph == 'Bar_Chart':
-                    st.plotly_chart(px.bar(grouped_data, y=grouped_data.columns[0], x='amount', color='servicecode', barmode='group', orientation='h'), use_container_width=True)
+                    st.plotly_chart(px.bar(grouped_data, y=grouped_data.columns[0], x='amount', 
+                                       color='servicecode', barmode='group', orientation='h',
+                                       labels={'amount': 'Amount ($)'}),
+                                 use_container_width=True)
                 elif Graph == 'Scatter_Chart':
-                    st.plotly_chart(px.scatter(grouped_data, x=grouped_data.columns[0], y='amount', color='servicecode'), use_container_width=True)
+                    st.plotly_chart(px.scatter(grouped_data, x=grouped_data.columns[0], y='amount', 
+                                            color='servicecode',
+                                            labels={'amount': 'Amount ($)'}),
+                                 use_container_width=True)
 
             st.divider()
             st.markdown("### ROKU DATA SET")
@@ -898,7 +975,7 @@ class ContecApp:
             grid_options.configure_pagination(paginationAutoPageSize=True)
             AgGrid(df, gridOptions=grid_options.build())
             st.divider()
-#---------------------------------------------------------------------------------------------------------------------------
+    
     @cached(cache=TTLCache(maxsize=2, ttl=1800))
     def echo(self):
         st.markdown(
@@ -919,15 +996,13 @@ class ContecApp:
             try:
                 # Convert columns to appropriate types
                 df['reportdate'] = pd.to_datetime(df['reportdate'], errors='coerce')
-                df['qty'] = pd.to_numeric(df['qty'], errors='coerce')
-                df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
-                df['rate'] = pd.to_numeric(df['rate'], errors='coerce')
+                df['qty'] = pd.to_numeric(df['qty'], errors='coerce').fillna(0).astype(int)
+                df['amount'] = pd.to_numeric(df['amount'], errors='coerce').fillna(0).round(2)
+                df['rate'] = pd.to_numeric(df['rate'], errors='coerce').fillna(0).round(2)
 
-                # Drop rows with missing important values
-                df.dropna(subset=['reportdate', 'qty', 'amount', 'rate'], inplace=True)
-
-                # Add date parts
-                df['Week'] = df['reportdate'].dt.isocalendar().week
+                # Calculate Sunday-to-Saturday weeks
+                week_starts, _, week_numbers = self.get_week_start_end_dates(df['reportdate'])
+                df['Week'] = week_numbers
                 df['Month'] = df['reportdate'].dt.month
                 df['Quarter'] = df['reportdate'].dt.quarter
                 df['Year'] = df['reportdate'].dt.year
@@ -936,13 +1011,12 @@ class ContecApp:
                 st.error(f"Error processing data: {e}")
             else:
                 required_cols = ['reportdate', 'servicecode', 'Model', 'rate', 'qty', 'amount']
-# copying from old files
                 if not all(col in df.columns for col in required_cols):
                     st.error(f"❌ Data file must contain these columns: {', '.join(required_cols)}")
                     st.divider()
                 else:
                     # Display data summary
-                    st.subheader("📌Data Summary")
+                    st.subheader("📌Data Summary - 2025")
                     col_summary1, col_summary2,col_summary3 = st.columns(3)
                     with col_summary1:
                         st.metric("Total Records", len(df))
@@ -960,9 +1034,9 @@ class ContecApp:
                         st.subheader("📌 High & Low Revenue Models")
                             
                         # Calculate metrics
-                        total_revenue = df['amount'].sum()
+                        total_revenue = df['amount'].sum().round(2)
                         total_qty = df['qty'].sum()
-                        avg_rate = df['rate'].mean()
+                        avg_rate = df['rate'].mean().round(2)
                             
                         # Create metric columns
                         col_metrics1, col_metrics2, col_metrics3 = st.columns(3)
@@ -1007,7 +1081,7 @@ class ContecApp:
                             )
                             
                             # Highest 3 Models by Revenue
-                            top_amount = df.groupby("Model")["amount"].sum().sort_values(ascending=False).head(3)
+                            top_amount = df.groupby("Model")["amount"].sum().sort_values(ascending=False).round(2).head(3)
                             st.write("### 🔼 Highest 3 Models by Revenue")
                             
                             # Configure AgGrid
@@ -1068,7 +1142,7 @@ class ContecApp:
                             )
                             
                             # Least 3 Models by Revenue
-                            bottom_amount = df.groupby("Model")["amount"].sum().sort_values(ascending=True).head(3)
+                            bottom_amount = df.groupby("Model")["amount"].sum().sort_values(ascending=True).round(2).head(3)
                             st.write("### 🔽 Least 3 Models by Revenue")
                             
                             # Configure AgGrid
@@ -1102,18 +1176,18 @@ class ContecApp:
                         st.divider()
                             
                         # Calculate daily trends
-                        revenue_trend = df.groupby("reportdate")["amount"].sum()
+                        revenue_trend = df.groupby("reportdate")["amount"].sum().round(2)
                         qty_trend = df.groupby("reportdate")["qty"].sum()
                             
                         # Create metric columns for trends
                         col_trend1, col_trend2 = st.columns(2)
 
                         with col_trend1:
-                            st.metric("Peak Revenue Per Day", 
+                            st.metric("Peak Revenue of the Day", 
                                     f"${revenue_trend.max():,.2f}", 
                                     revenue_trend.idxmax().strftime('%Y-%m-%d'))
                         with col_trend2:
-                            st.metric("Peak Quantity Per Day", 
+                            st.metric("Peak Quantity of the Day", 
                                     f"{qty_trend.max():,}", 
                                     qty_trend.idxmax().strftime('%Y-%m-%d'))
                         st.divider()
@@ -1127,13 +1201,13 @@ class ContecApp:
                                 columns={'index': 'ServiceCode', 'servicecode': 'Count'}))
 
                         with col_service2:
-                            st.write("### 💰 Highest Revenue-Generating ServiceCode")
-                            revenue_service = df.groupby("servicecode")["amount"].sum().sort_values(ascending=False).head(10)
+                            st.write("### 💰 Highest Revenue ServiceCodes")
+                            revenue_service = df.groupby("servicecode")["amount"].sum().sort_values(ascending=False).round(2).head(10)
                             st.dataframe(revenue_service.reset_index().rename(
                                 columns={'amount': 'Total Revenue ($)'}))
 
                          # Average rate analysis
-                        avg_rate = df.groupby("Model")["rate"].mean().sort_values(ascending=False)
+                        avg_rate = df.groupby("Model")["rate"].mean().round(2)
                         st.write("### 🧮 Average Rate per Model")
                         st.dataframe(avg_rate.reset_index().rename(columns={'rate': 'Average Rate ($)'}))
                         st.divider()
@@ -1141,11 +1215,11 @@ class ContecApp:
                         st.subheader("Plot Trend")
                         # Plot trends
                         fig, ax = plt.subplots(figsize=(12, 5))
-                        revenue_trend.plot(ax=ax, label="Revenue", color='green')
+                        revenue_trend.plot(ax=ax, label="Revenue ($)", color='green')
                         qty_trend.plot(ax=ax, label="Quantity", color='blue')
                         ax.legend()
                         ax.set_title("📆 Daily Revenue & Quantity Trend")
-                        ax.set_ylabel("Amount / Quantity")
+                        ax.set_ylabel("Amount ($) / Quantity")
                         st.pyplot(fig)
 
                     with tab3:
@@ -1198,7 +1272,7 @@ class ContecApp:
                         
                         # Revenue share pie chart
                         st.write("### 📊 Revenue Share by Top 10 Models")
-                        revenue_share = df.groupby("Model")["amount"].sum().sort_values(ascending=False).head(10)
+                        revenue_share = df.groupby("Model")["amount"].sum().sort_values(ascending=False).round(2).head(10)
                         
                         col_pie1, col_pie2 = st.columns([1, 2])
                         
@@ -1207,7 +1281,7 @@ class ContecApp:
                             revenue_share.reset_index()
                             .rename(columns={'amount': 'Total Revenue ($)'})
                             .style
-                            .format({'Total Revenue ($)': '{:,.2f}'})  # Format to 2 decimal places
+                            .format({'Total Revenue ($)': '${:,.2f}'})  # Format to 2 decimal places
                             .set_properties(**{'text-align': 'center'}),
                             use_container_width=True
                         )
@@ -1236,7 +1310,6 @@ class AppExe:
             self.auth.login_page()
         else:
             with st.sidebar:
-                dark_mode_toggle()  # Add dark mode toggle to sidebar
                 st.image("contec.png", width=175)
                 
                 # Add user management option for admins
