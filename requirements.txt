@@ -10,3 +10,4 @@ streamlit-extras==0.6.0
 cachetools==5.5.2
 bcrypt==4.3.0
 python-dotenv==1.1.0
+timezones==3.0.0
