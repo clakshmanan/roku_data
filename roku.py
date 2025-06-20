@@ -1,6 +1,6 @@
 # works well beta () modification
 import os
-import time
+import time, timezones
 import pytz
 import json
 import sqlite3
@@ -20,6 +20,8 @@ from io import StringIO
 from urllib.parse import urljoin
 from io import StringIO
 from cachetools import cached, TTLCache
+import streamlit as st
+from streamlit_calendar import calendar
 
 # Page configuration with optimized settings
 st.set_page_config(
@@ -27,7 +29,7 @@ st.set_page_config(
     page_icon="🌀",
     layout='wide',
     initial_sidebar_state="expanded"
-    
+
 )
 
 # Remove footer and optimize Streamlit performance
@@ -296,13 +298,11 @@ class Authentication:
        
         with col1:
             st.write("A product of")
-            st.image("https://github.com/clakshmanan/roku_data/contec.png", width=175)
-            st.subheader("ROKU_CONTEC")
-            #st.header(datetime.now().strftime("%H:%M"))
-            #utc_now = datetime.utcnow().strftime('%Y-%m-%d   %H:%M:%S')
-            #utc_now = datetime.utcnow().strftime('%Y-%m-%d   %H:%M')
-            #st.header(utc_now)
-            #st.write(f'\033  HAVE A HAPPY DAY  \r{utc_now}', end='', flush=True)
+            # local
+            st.image("C:/clak/_alfa_projects/_deployment/roku_data/contec.png", width=175)
+            st.image("https://github.com/clakshmanan/Data_Roku/contec.png", width=175)
+            #st.image("https://github.com/clakshmanan/roku_data.git/contec.png", width=175)
+            #st.subheader("CONTEC_ROKU")
     
     #---------------------------------------------------------------------------------
     def user_management_page(self):
@@ -348,11 +348,11 @@ class Authentication:
             for username, is_admin, is_superadmin in users:
                 # Determine card color based on user role
                 if is_superadmin:
-                    card_color = "linear-gradient(135deg, #00ccff 0%, #fad0c4 100%)"
+                    card_color = "linear-gradient(135deg, #054cff 0%, #fad0c4 100%)"
                 elif is_admin:
-                    card_color = "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)"
+                    card_color = "linear-gradient(135deg, #00000 0%, #96e6a1 100%)"
                 else:
-                    card_color = "linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)"
+                    card_color = "linear-gradient(135deg, #000000 0%, #96e6a1 100%)"
                 
                 with st.expander(f"{username} {'👑' if is_superadmin else '🔑' if is_admin else '👤'}"):
                     st.markdown(
@@ -409,11 +409,11 @@ class ContecApp:
     
     def home_page(self):
         st.markdown(
-            '<p style="font-family:sans-serif;text-align:center; color:#42b6f5; font-size: 25px;">✨ CONTEC CHENNAI LOCATION ✨</p>',
+            '<p style="font-family:sans-serif;text-align:center; color:#42b6f5; font-size: 25px;">✨ANALYSIS ON ROKU DATA✨</p>',
             unsafe_allow_html=True
         )
-        st.divider()
-        st.subheader("Analysis on Roku Data")
+        #st.divider()
+        #st.subheader("Analysis on Roku Data")
         pan1, pan2 = st.columns(2)
         with pan1:
             st.write("")
@@ -463,10 +463,10 @@ class ContecApp:
     # ---------------------------------------------------------------------------------------------------
     @cached(cache=TTLCache(maxsize=2, ttl=1800))
     def alfa(self):
-        st.markdown(
-            '<p style="font-family:sans-serif;text-align:center; color:#83e6e6; font-size: 25px;">WEEK WISE  MONTHLY REVENUE GRAPH</p>',
-            unsafe_allow_html=True
-        )
+        #st.markdown(
+        #   '<p style="font-family:sans-serif;text-align:center; color:#83e6e6; font-size: 25px;">WEEK WISE  MONTHLY REVENUE GRAPH</p>',
+        #    unsafe_allow_html=True
+        #)
         
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -510,7 +510,7 @@ class ContecApp:
         
         if not weekly_data.empty:
             st.markdown(
-                f"<h4 style='text-align: center; font-family: Arial, sans-serif; font-weight: bold; color:#4242cf;'>📅 {datetime(2000, month, 1).strftime('%B')} {year} - Metrics</h4>",
+                f"<h4 style='text-align: center; font-family: Arial, sans-serif; font-weight: bold; color:#e32bda;'>📅 {datetime(2000, month, 1).strftime('%B')} {year} - Metrics</h4>",
                 unsafe_allow_html=True
             )
             
@@ -598,10 +598,10 @@ class ContecApp:
             st.warning("⚠️ No data found for the selected filters.")
     #----------------------------------------------------------------------------------------------
     def beta(self):
-        st.markdown(
-            "<h3 style='text-align: center; font-family: Arial, sans-serif; font-weight: bold; color:#0cb3f0;'>📊Roku Week-Wise Data</h3>",
-            unsafe_allow_html=True
-        )
+        #st.markdown(
+        #    "<h3 style='text-align: center; font-family: Arial, sans-serif; font-weight: bold; color:#0cb3f0;'>📊Roku Week-Wise Data</h3>",
+        #    unsafe_allow_html=True
+        #)
 
         @cached(cache=TTLCache(maxsize=2, ttl=1800))
         def fetch_weekly_data(year, month):
@@ -655,7 +655,7 @@ class ContecApp:
         
         if not weekly_data.empty:
             st.markdown(
-                f"<h4 style='text-align: center; font-family: Arial, sans-serif; font-weight: bold; color: #0cb3f0;'>📅 {datetime(2000, month, 1).strftime('%B')} {year} - Weekly Metrics</h4>",
+                f"<h4 style='text-align: center; font-family: Arial, sans-serif; font-weight: bold; color: #e32bda;'>📅 {datetime(2000, month, 1).strftime('%B')} {year} - Weekly Metrics</h4>",
                 unsafe_allow_html=True
             )
             
@@ -796,7 +796,8 @@ class ContecApp:
                         if row['week_number'] == 1:
                             st.info("🌟 First week of the year - no comparison available")
                         else:
-                            st.info("⚠️ Previous week data not available for comparison")
+                            #st.info("⚠️ Previous week data not available for comparison")
+                            st.write(" ")
                 
                 st.markdown("<hr style='border-top: 1px dashed #ddd; margin: 20px 0;'>", unsafe_allow_html=True)
                 time.sleep(0.3)
@@ -817,14 +818,16 @@ class ContecApp:
             
             return filtered
 
-        new_title = '<p style="font-family:sans-serif;text-align:center; color:#5142f5; font-size: 25px;">🎯 Invoiced Week-wise Servicecode Data 🎯</p>'
-        st.markdown(new_title, unsafe_allow_html=True)
-        st.markdown("#### Select Invoice Week")
+        #new_title = '<p style="font-family:sans-serif;text-align:center; color:#5142f5; font-size: 25px;">🎯 Invoiced Week-wise Servicecode Data 🎯</p>'
+        #st.markdown(new_title, unsafe_allow_html=True)
+        #st.markdown("#### Select Invoice Week")
         
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
-            from_date = st.date_input("From Date", value=datetime(2025, 1, 1))
+            st.markdown("#### Provide Invoicing Week ➡️")
         with col2:
+            from_date = st.date_input("From Date", value=datetime(2025, 1, 1))
+        with col3:
             to_date = st.date_input("To Date", value=datetime.today())
 
         with st.spinner("Loading data..."):
@@ -851,7 +854,9 @@ class ContecApp:
             weekly_metrics = calculate_metrics(df)
             
             if st.session_state.selected_service is None:
-                st.markdown("##### Metrics of the week")
+                new_title = '<p style="font-family:sans-serif;text-align:center; color:#e32bda; font-size:25px;">SERVICECODEs DATA</p>'
+                st.markdown(new_title, unsafe_allow_html=True)
+                #st.markdown("##### Metrics of the week")
                 cols = st.columns(3)
                 for idx, row in weekly_metrics.iterrows():
                     with cols[idx % 3]:
@@ -892,11 +897,11 @@ class ContecApp:
             df = fetch_statistical_data()
         
         st.markdown(
-            '<p style="font-family:sans-serif;text-align:center; color:#2803fc; font-size: 25px;">📊✨ ROKU DATA SET ✨📊</p>',
+            '<p style="font-family:sans-serif;text-align:center; color:#e32bda; font-size: 25px;">📊✨ ROKU DATA SET - 2025 ✨📊</p>',
             unsafe_allow_html=True
         )
-        st.header("Roku Statistics")
-        st.divider()
+        #st.header("Roku Statistics")
+        #st.divider()
         
         if not df.empty:
             # Calculate Sunday-to-Saturday weeks
@@ -967,8 +972,9 @@ class ContecApp:
                                             labels={'amount': 'Amount ($)'}),
                                  use_container_width=True)
 
-            st.divider()
-            st.markdown("### ROKU DATA SET")
+            #st.divider()
+            st.markdown("####  Roku Data Set - 2025")
+            st.write("Right-click on the data to download data set as CSV / Excel")
             grid_options = GridOptionsBuilder.from_dataframe(df)
             grid_options.configure_default_column(
                 enablePivot=True, enableValue=True, enableRowGroup=True, sortable=True, filterable=True)
@@ -978,11 +984,11 @@ class ContecApp:
     
     @cached(cache=TTLCache(maxsize=2, ttl=1800))
     def echo(self):
-        st.markdown(
-            '<p style="font-family:sans-serif;text-align:center; color:#3bc0f5; font-size: 30px;">📊ANALYSIS ON ROKU DATA📊</p>',
-            unsafe_allow_html=True
-        )
-        st.divider()
+        #st.markdown(
+        #    '<p style="font-family:sans-serif;text-align:center; color:#3bc0f5; font-size: 30px;">📊ANALYSIS ON ROKU DATA📊</p>',
+        #    unsafe_allow_html=True
+        #)
+        #st.divider()
         
         @cached(cache=TTLCache(maxsize=2, ttl=1800))
         def fetch_roku_data():
@@ -1016,7 +1022,7 @@ class ContecApp:
                     st.divider()
                 else:
                     # Display data summary
-                    st.subheader("📌Data Summary - 2025")
+                    st.subheader("📌Analysis on Roku Dataset - 2025")
                     col_summary1, col_summary2,col_summary3 = st.columns(3)
                     with col_summary1:
                         st.metric("Total Records", len(df))
@@ -1053,7 +1059,7 @@ class ContecApp:
                         with col1:
                             # Highest 3 Models by Quantity
                             top_qty = df.groupby("Model")["qty"].sum().sort_values(ascending=False).head(3)
-                            st.write("### 🔼 Highest 3 Models by Quantity")
+                            st.write("#### 🔼 Highest 3 Models by Quantity")
                             
                             # Configure AgGrid
                             gb_qty = GridOptionsBuilder.from_dataframe(
@@ -1082,7 +1088,7 @@ class ContecApp:
                             
                             # Highest 3 Models by Revenue
                             top_amount = df.groupby("Model")["amount"].sum().sort_values(ascending=False).round(2).head(3)
-                            st.write("### 🔼 Highest 3 Models by Revenue")
+                            st.write("#### 🔼 Highest 3 Models by Revenue")
                             
                             # Configure AgGrid
                             gb_amount = GridOptionsBuilder.from_dataframe(
@@ -1114,7 +1120,7 @@ class ContecApp:
                         with col2:
                             # Least 3 Models by Quantity
                             bottom_qty = df.groupby("Model")["qty"].sum().sort_values(ascending=True).head(3)
-                            st.write("### 🔽 Least 3 Models by Quantity")
+                            st.write("#### 🔽 Least 3 Models by Quantity")
                             
                             # Configure AgGrid
                             gb_bottom_qty = GridOptionsBuilder.from_dataframe(
@@ -1143,7 +1149,7 @@ class ContecApp:
                             
                             # Least 3 Models by Revenue
                             bottom_amount = df.groupby("Model")["amount"].sum().sort_values(ascending=True).round(2).head(3)
-                            st.write("### 🔽 Least 3 Models by Revenue")
+                            st.write("#### 🔽 Least 3 Models by Revenue")
                             
                             # Configure AgGrid
                             gb_bottom_amount = GridOptionsBuilder.from_dataframe(
@@ -1195,20 +1201,20 @@ class ContecApp:
                         # Service code analysis
                         col_service1, col_service2 = st.columns(2)
                         with col_service1:
-                            st.write("### �️ Most Frequent ServiceCode")
+                            st.write("#### �️ Most Frequent ServiceCode")
                             freq_service = df['servicecode'].value_counts().head(10)
                             st.dataframe(freq_service.reset_index().rename(
                                 columns={'index': 'ServiceCode', 'servicecode': 'Count'}))
 
                         with col_service2:
-                            st.write("### 💰 Highest Revenue ServiceCodes")
+                            st.write("#### 💰 Highest Revenue ServiceCodes")
                             revenue_service = df.groupby("servicecode")["amount"].sum().sort_values(ascending=False).round(2).head(10)
                             st.dataframe(revenue_service.reset_index().rename(
                                 columns={'amount': 'Total Revenue ($)'}))
 
                          # Average rate analysis
                         avg_rate = df.groupby("Model")["rate"].mean().round(2)
-                        st.write("### 🧮 Average Rate per Model")
+                        st.write("#### 🧮 Average Rate per Model")
                         st.dataframe(avg_rate.reset_index().rename(columns={'rate': 'Average Rate ($)'}))
                         st.divider()
 
@@ -1233,7 +1239,7 @@ class ContecApp:
                         # Sort and filter top 10
                         top10_weekly_model = weekly_model.sort_values(by="count", ascending=False).head(10)
                         # Display with AgGrid
-                        st.write("### 📆 Weekly Occurrences (Top 10)")
+                        st.write("#### 📆 Weekly Occurrences (Top 10)")
                         # Set AgGrid options
                         gb = GridOptionsBuilder.from_dataframe(top10_weekly_model)
                         gb.configure_default_column(cellStyle={'textAlign': 'center'})
@@ -1246,7 +1252,7 @@ class ContecApp:
                         # Sort and filter top 10
                         top10_monthly_model = monthly_model.sort_values(by='count', ascending=False).head(10)
                         # Display header
-                        st.write("### 📆 Monthly Occurrences (Top 10)")
+                        st.write("#### 📆 Monthly Occurrences (Top 10)")
                         # Build grid options
                         gb = GridOptionsBuilder.from_dataframe(top10_monthly_model)
                         # Center align both cells and headers
@@ -1262,7 +1268,7 @@ class ContecApp:
                         AgGrid(top10_monthly_model, gridOptions=gridOptions, height=400, fit_columns_on_grid_load=True)
                         #---------------------------------------------------------------------
                         quarterly_model = df.groupby(["Year", "Quarter", "Model"]).size().reset_index(name='count')
-                        st.write("### 📆 Quarterly Occurrences (Top 10)")
+                        st.write("#### 📆 Quarterly Occurrences (Top 10)")
 
                         gb = GridOptionsBuilder.from_dataframe( quarterly_model)
                         gb.configure_default_column(cellStyle={'textAlign': 'center'})
@@ -1271,7 +1277,7 @@ class ContecApp:
                         AgGrid( quarterly_model, gridOptions=gridOptions, height=400, fit_columns_on_grid_load=True)
                         
                         # Revenue share pie chart
-                        st.write("### 📊 Revenue Share by Top 10 Models")
+                        st.write("#### 📊 Revenue Share by Top 10 Models")
                         revenue_share = df.groupby("Model")["amount"].sum().sort_values(ascending=False).round(2).head(10)
                         
                         col_pie1, col_pie2 = st.columns([1, 2])
