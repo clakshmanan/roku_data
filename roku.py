@@ -21,7 +21,6 @@ from urllib.parse import urljoin
 from io import StringIO
 from cachetools import cached, TTLCache
 import streamlit as st
-from streamlit_calendar import calendar
 
 # Page configuration with optimized settings
 st.set_page_config(
@@ -297,10 +296,14 @@ class Authentication:
                         st.rerun()
        
         with col1:
-            st.write("A product of")
+            st.write("### A product of")
+            st.markdown(
+            '<p style="font-family:sans-serif;text-align:left; color:#eb1547; font-size: 45px;">Contec</p>',
+            unsafe_allow_html=True
+            )
             # local
-            st.image("C:/clak/_alfa_projects/_deployment/roku_data/contec.png", width=175)
-            st.image("https://github.com/clakshmanan/Data_Roku/contec.png", width=175)
+            #st.image("C:/clak/_alfa_projects/_deployment/roku_data/contec.png", width=175)
+            #st.image("https://github.com/clakshmanan/Data_Roku/contec.png", width=175)
             #st.image("https://github.com/clakshmanan/roku_data.git/contec.png", width=175)
             #st.subheader("CONTEC_ROKU")
     
